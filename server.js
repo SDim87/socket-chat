@@ -23,7 +23,10 @@ app.get('/users', (req, res) => {
 
 app.get('/rooms/:id', (req, res) => {
     const { id: roomId } = req.params;
-    console.log('req', req.params);
+    console.log('~ roomId', roomId)
+    console.log('rooms', rooms);
+    console.log('rooms.has(roomId)', rooms.has(roomId));
+    
     const obj = rooms.has(roomId)
         ? {
               users: [...rooms.get(roomId).get('users').values()],

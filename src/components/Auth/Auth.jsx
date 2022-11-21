@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { useCallback, useState } from 'react';
 // import { socket } from '../../utils/socket';
-import { Button, InputNumber, Input } from 'antd';
+import { Button, Input } from 'antd';
 import styles from './Auth.module.css';
 
 export const Auth = ({ onLogin }) => {
@@ -10,7 +10,7 @@ export const Auth = ({ onLogin }) => {
     const [roomId, setRoomId] = useState();
     const [userName, setNameUser] = useState();
 
-    const onChangeRoomId = useCallback((value) => setRoomId(value), []);
+    const onChangeRoomId = useCallback((evt) => setRoomId(evt.target.value), []);
     const onChangeName = useCallback((evt) => setNameUser(evt.target.value), []);
 
     const onSubmit = useCallback(() => {
@@ -32,11 +32,10 @@ export const Auth = ({ onLogin }) => {
 
     return (
         <div className={styles.wrapper}>
-            <InputNumber
+            <Input
                 onChange={onChangeRoomId}
                 placeholder="Номер комнаты"
                 controls={false}
-                type="number"
                 style={{ width: '100%', marginBottom: '8px' }}
                 value={roomId}
             />
