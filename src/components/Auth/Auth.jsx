@@ -36,6 +36,7 @@ export const Auth = ({ onLogin }) => {
                 onChange={onChangeRoomId}
                 placeholder="Номер комнаты"
                 controls={false}
+                type="number"
                 style={{ width: '100%', marginBottom: '8px' }}
                 value={roomId}
             />

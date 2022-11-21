@@ -1,5 +1,3 @@
-// import type { Socket } from "socket.io";
-
 const express = require('express');
 
 const PORT = 9999;
@@ -23,8 +21,17 @@ app.get('/users', (req, res) => {
     res.send('response');
 });
 
-app.get('/rooms', (req, res) => {
-    res.json(rooms);
+app.get('/rooms/:id', (req, res) => {
+    const { id: roomId } = req.params;
+    console.log('req', req.params);
+    const obj = rooms.has(roomId)
+        ? {
+              users: [...rooms.get(roomId).get('users').values()],
+              messages: [...rooms.get(roomId).get('messages').values()],
+          }
+        : { users: [], messages: [] };
+
+    res.json(obj);
 });
 
 app.post('/rooms', (req, res) => {
@@ -34,7 +41,6 @@ app.post('/rooms', (req, res) => {
     if (!rooms.has(roomId)) {
         rooms.set(
             roomId,
-            // @ts-ignore
             new Map([
                 ['users', new Map()],
                 ['messages', []],
@@ -43,12 +49,12 @@ app.post('/rooms', (req, res) => {
     }
 
     if (roomId && userName) {
-        res.json({
+        res.send({
             result: true,
             rooms: [...rooms.keys()],
         });
     } else {
-        res.json({
+        res.send({
             result: false,
         });
     }
@@ -65,9 +71,21 @@ io.on('connection', (socket) => {
         // данные пользователей в комнате
         const users = [...rooms.get(roomId).get('users').values()];
         // отсылаем данные всем кроме вошедшего
-        socket.broadcast.to(roomId).emit('ROOM:JOINED', users);
+        setTimeout(() => socket.to(roomId).emit('ROOM:SET_USERS', users), 100);
+        // socket.to(roomId).emit('ROOM:SET_USERS', users);
     });
     // console.log('user connected', socket.id);
+
+    socket.on('disconnect', () => {
+        rooms.forEach((value, roomId) => {
+            // console.log('room', room);
+
+            if (value.get('users').delete(socket.id)) {
+                const users = [...value.get('users').values()];
+                socket.broadcast.to(roomId).emit('ROOM:SET_USERS', users);
+            }
+        });
+    });
 });
 
 // слушаем сервер
