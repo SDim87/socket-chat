@@ -25,6 +25,15 @@ function App() {
         [],
     );
 
+    const addMessage = useCallback(
+        (message) =>
+            dispatch({
+                type: 'SET_MESSAGES',
+                payload: message,
+            }),
+        [],
+    );
+
     const onLogin = async (objLogin) => {
         console.log('🚀 ~ file: App.jsx ~ line 29 ~ onLogin ~ objLogin', objLogin);
         dispatch({
@@ -35,24 +44,23 @@ function App() {
         socket.emit('ROOM:JOIN', objLogin);
         // запрос на сервер для актуальных данных
         const { data } = await axios.get(`/rooms/${objLogin.roomId}`);
-        console.log(' ~ data', data);
 
-        setUsers(data.users);
+        // setUsers(data.users);
+        dispatch({
+            type: 'SET_DATA',
+            payload: data,
+        });
     };
 
     useEffect(() => {
-        // socket.on('ROOM:JOINED', (users) => {
-        //     console.log('ROOM:JOINED', users);
-        //     setUsers(users);
-        // });
-
         socket.on('ROOM:SET_USERS', setUsers);
-    }, [setUsers]);
+        socket.on('ROOM:ADD_MESSAGE', addMessage);
+    }, [addMessage, setUsers]);
 
     return (
         <div className={styles.app}>
             {!state.joined && <Auth onLogin={onLogin} />}
-            {state.joined && <Chat state={state} />}
+            {state.joined && <Chat state={state} onAddMessage={addMessage} />}
         </div>
     );
 }

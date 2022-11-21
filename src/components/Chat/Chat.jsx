@@ -1,24 +1,38 @@
 import { Divider, Input, Button } from 'antd';
+import { useEffect, useRef } from 'react';
 import { useCallback, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { socket } from '../../utils/socket';
 import styles from './Chat.module.css';
 
 const { TextArea } = Input;
 
-export const Chat = ({ state }) => {
-    const { users, messages } = state;
+export const Chat = ({ state, onAddMessage }) => {
+    const { roomId, users, messages, userName } = state;
+    const messageRef = useRef(null);
 
-    console.log('~ Chat ~ users', users)
+    console.log('~ messages', messages);
 
     const [textarea, setTextarea] = useState('');
 
-    const onChange = (evt) => {
-        setTextarea(evt.target.value);
-    };
+    const onChange = (evt) => setTextarea(evt.target.value);
 
     const onSendMessage = useCallback(() => {
         console.log('onSendMessage:', textarea);
-    }, [textarea]);
+        socket.emit('ROOM:NEW_MESSAGE', {
+            roomId,
+            userName,
+            text: textarea,
+        });
+
+        onAddMessage({ userName, text: textarea });
+
+        setTextarea('');
+    }, [onAddMessage, roomId, textarea, userName]);
+
+    useEffect(() => {
+        messageRef?.current?.scrollTo(0, 999999999);
+    }, [messages]);
 
     return (
         <div className={styles.wrapper}>
@@ -32,13 +46,15 @@ export const Chat = ({ state }) => {
             </div>
             <div className={styles.leftPlace}>
                 <h2>Сообщения:</h2>
-                <div className={styles.messages}>
-                    {messages.map((text, i) => (
-                        <div className={styles.message} key={uuidv4()}>
-                            <div className={styles.userMessage}>Test User</div>
-                            {text}
-                        </div>
-                    ))}
+                <div className={styles.messages} ref={messageRef}>
+                    {messages.map(({ userName: messageUserName, text: messageText }) => {
+                        return (
+                            <div className={styles.message} key={uuidv4()}>
+                                <div className={styles.userMessage}>{messageUserName}</div>
+                                {messageText}
+                            </div>
+                        );
+                    })}
                 </div>
 
                 <div className={styles.sendMessage}>
@@ -49,6 +65,7 @@ export const Chat = ({ state }) => {
                         maxLength={500}
                         style={{ height: 80, resize: 'none' }}
                         onChange={onChange}
+                        value={textarea}
                     />
                     <Button
                         type="primary"

@@ -8,6 +8,13 @@ export const reducer = (state, action) => {
                 userName: action.payload.userName,
             };
 
+        case 'SET_DATA':
+            return {
+                ...state,
+                users: action.payload.users,
+                messages: action.payload.messages,
+            };
+
         case 'SET_USERS':
             return {
                 ...state,
@@ -17,7 +24,7 @@ export const reducer = (state, action) => {
         case 'SET_MESSAGES':
             return {
                 ...state,
-                messages: action.payload,
+                messages: [...state.messages, action.payload],
             };
 
         default:

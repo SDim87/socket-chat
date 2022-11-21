@@ -23,10 +23,9 @@ app.get('/users', (req, res) => {
 
 app.get('/rooms/:id', (req, res) => {
     const { id: roomId } = req.params;
-    console.log('~ roomId', roomId)
     console.log('rooms', rooms);
     console.log('rooms.has(roomId)', rooms.has(roomId));
-    
+
     const obj = rooms.has(roomId)
         ? {
               users: [...rooms.get(roomId).get('users').values()],
@@ -74,10 +73,17 @@ io.on('connection', (socket) => {
         // данные пользователей в комнате
         const users = [...rooms.get(roomId).get('users').values()];
         // отсылаем данные всем кроме вошедшего
-        setTimeout(() => socket.to(roomId).emit('ROOM:SET_USERS', users), 100);
-        // socket.to(roomId).emit('ROOM:SET_USERS', users);
+        socket.to(roomId).emit('ROOM:SET_USERS', users);
     });
     // console.log('user connected', socket.id);
+
+    socket.on('ROOM:NEW_MESSAGE', ({ roomId, userName, text }) => {
+        console.log('connection -> roomId', roomId);
+        const objMessage = { userName, text };
+        // записываем сообщение
+        rooms.get(roomId).get('messages').push(objMessage);
+        socket.to(roomId).emit('ROOM:ADD_MESSAGE', objMessage);
+    });
 
     socket.on('disconnect', () => {
         rooms.forEach((value, roomId) => {
